@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
 using SecuringWebAPI.Data;
 using SecuringWebAPI.Model;
 using SecuringWebAPI.Model.Domain;
@@ -36,7 +37,7 @@ namespace SecuringWebAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Login([FromBody] LoginModel model)
+        public async Task<IActionResult> GetToken([FromBody] LoginModel model)
         {
             var user = await _userManager.FindByNameAsync(model.UserName);
             _logger.LogInformation($"Email: {model.UserName}, Password: {model.Password}");
@@ -56,7 +57,7 @@ namespace SecuringWebAPI.Controllers
                 {
                     authClaims.Add(new Claim(ClaimTypes.Role, roles));
                 }
-
+                
                 var token = _tokenService.GetToken(authClaims);
                 var refreshToken = _tokenService.GetRefreshToken();
 
@@ -69,13 +70,15 @@ namespace SecuringWebAPI.Controllers
                         RefreshTokenExpiry = DateTime.Now.AddDays(1),
                         UserName = user.UserName
                     };
+                    await _dbContext.TokenInfos.AddAsync(info);
                 }
                 else
                 {
                     tokenInfo.RefreshToken = refreshToken;
-                    tokenInfo.RefreshTokenExpiry = DateTime.Now.AddDays(1);
+                    tokenInfo.RefreshTokenExpiry = DateTime.UtcNow.AddDays(1);
                 }
-                _dbContext.SaveChanges();
+                
+                await _dbContext.SaveChangesAsync();
 
                 return Ok(
                     new LoginResponse
@@ -84,13 +87,14 @@ namespace SecuringWebAPI.Controllers
                         UserName = user.UserName,
                         AccessToken = token.TokenString,
                         RefreshToken = refreshToken,
+                        Expiration = DateTime.UtcNow.AddMinutes(1),
                         Status = new Status
                         {
                             StatusCode = Convert.ToInt32(HttpStatusCode.OK),
                             StatusMessage = "Successfully Logged"
                         }
                     }
-                    );
+                    ); 
 
             }
             return Unauthorized(
@@ -105,7 +109,7 @@ namespace SecuringWebAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Registration([FromBody] RegistrationModel model)
+        public async Task<IActionResult> UserRegistration([FromBody] RegistrationModel model)
         {
             try
             {
@@ -134,7 +138,7 @@ namespace SecuringWebAPI.Controllers
                             if (await _roleManager.RoleExistsAsync(UserRoles.User))
                                 await _userManager.AddToRoleAsync(User, UserRoles.User);
 
-                            return CreatedAtAction(nameof(Registration), new { UserName = model.UserName, Result = "User created Successfully." });
+                            return CreatedAtAction(nameof(UserRegistration), new { UserName = model.UserName, Result = "User created Successfully." });
                         }
 
                         return Conflict();
@@ -158,5 +162,16 @@ namespace SecuringWebAPI.Controllers
                 Password = ""
             });
         }
+
+        [HttpPost]
+        [Consumes("application/x-www-form-urlencoded")]
+        public async Task<IActionResult> fromform([FromForm] LoginUserModel model)
+        {
+            var jsonresult = JsonConvert.SerializeObject(model);
+            var data = JsonConvert.DeserializeObject<LoginUserModel>(jsonresult);
+            return Ok(data);
+        }
+
+       
     }
 }

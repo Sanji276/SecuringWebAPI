@@ -14,17 +14,17 @@ namespace SecuringWebAPI.Controllers
         private readonly SecuringWebAPIContext _dbContext;
         private readonly ITokenService _tokenService;
 
-        public TokenController(SecuringWebAPIContext dbContext,ITokenService tokenService)
+        public TokenController(SecuringWebAPIContext dbContext, ITokenService tokenService)
         {
             _dbContext = dbContext;
             _tokenService = tokenService;
         }
         [HttpPost]
-        public IActionResult RefreshToken(RefreshTokenRequest refreshTokenModel)
+        public IActionResult RefreshToken([FromForm] RefreshTokenRequest refreshTokenModel)
         {
-            if(refreshTokenModel == null)
+            if (refreshTokenModel == null)
             {
-                return BadRequest("Invalid credentials");
+                return BadRequest("Invalid client request");
             }
             else
             {
@@ -32,9 +32,9 @@ namespace SecuringWebAPI.Controllers
                 string refreshToken = refreshTokenModel.RefreshToken;
                 var claimsPrincipal = _tokenService.GetPrincipalFromExpiredToken(accessToken);
                 var username = claimsPrincipal.Identity.Name;
-                
-                var user = _dbContext.TokenInfos.SingleOrDefault(x=>x.UserName == username);
-                if (user is null || user.RefreshToken!=refreshToken || user.RefreshTokenExpiry <= DateTime.Now)
+
+                var user = _dbContext.TokenInfos.SingleOrDefault(x => x.UserName == username);
+                if (user is null || user.RefreshToken != refreshToken || user.RefreshTokenExpiry <= DateTime.Now)
                 {
                     return BadRequest("Invalid credentials");
                 }
@@ -56,11 +56,11 @@ namespace SecuringWebAPI.Controllers
         }
 
         //revoke is used to remove the token entry from db
-        [HttpPost,Authorize]
+        [HttpPost, Authorize]
         public IActionResult Revoke()
         {
             var userName = User.Identity.Name;
-            var user = _dbContext.TokenInfos.Where(x=>x.UserName ==  userName).FirstOrDefault();
+            var user = _dbContext.TokenInfos.Where(x => x.UserName == userName).FirstOrDefault();
             if (user is null)
             {
                 return BadRequest();

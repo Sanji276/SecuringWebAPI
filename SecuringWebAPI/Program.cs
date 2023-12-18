@@ -39,6 +39,7 @@ builder.Services.AddAuthentication(
          options.RequireHttpsMetadata = false;
          options.TokenValidationParameters = new TokenValidationParameters
          {
+             
              ValidateIssuer = true,
              ValidateAudience = true,
              ValidateLifetime = true,
@@ -68,7 +69,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
-
+app.UseAuthentication();
 app.MapControllers();
 
 app.Run();
