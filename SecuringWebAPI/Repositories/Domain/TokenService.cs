@@ -40,7 +40,7 @@ namespace SecuringWebAPI.Repositories.Domain
                 ValidateIssuer = false,
                 ValidateIssuerSigningKey = true,
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SecretKey"])),
-                ValidateLifetime = false,
+                ValidateLifetime = false
 
             };
             var tokenHandler = new JwtSecurityTokenHandler();
@@ -54,7 +54,7 @@ namespace SecuringWebAPI.Repositories.Domain
             return principal;
         }
 
-        public string RefreshToken()
+        public string GetRefreshToken()
         {
             var randomNumber = new byte[32];
             using (var rand = RandomNumberGenerator.Create())

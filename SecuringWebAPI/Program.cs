@@ -4,6 +4,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using SecuringWebAPI.Data;
 using SecuringWebAPI.Model.Domain;
+using SecuringWebAPI.Repositories.Abstract;
+using SecuringWebAPI.Repositories.Domain;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,12 +15,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<SecuringWebAPIContext>(
     options => options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")
-        ));
+        ), ServiceLifetime.Scoped);
 
 
 //registering the service for identity core.
 builder.Services.AddIdentity<ApplicationUser,
                 IdentityRole>().AddEntityFrameworkStores<SecuringWebAPIContext>().AddDefaultTokenProviders();
+
+builder.Services.AddLogging();
 
 //Adding authentication
 builder.Services.AddAuthentication(
@@ -44,6 +48,8 @@ builder.Services.AddAuthentication(
              IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]))
          };
      });
+
+builder.Services.AddTransient<ITokenService, TokenService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

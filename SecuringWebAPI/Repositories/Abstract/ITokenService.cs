@@ -7,6 +7,6 @@ namespace SecuringWebAPI.Repositories.Abstract
     {
         ClaimsPrincipal GetPrincipalFromExpiredToken(string token);
         TokenResponse GetToken(IEnumerable<Claim> Userclaim);
-        string RefreshToken();
+        string GetRefreshToken();
     }
 }
