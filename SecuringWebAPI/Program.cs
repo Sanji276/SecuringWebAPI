@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using SecuringWebAPI.Data;
 using SecuringWebAPI.Model.Domain;
 using SecuringWebAPI.Repositories.Abstract;
@@ -24,6 +26,12 @@ builder.Services.AddIdentity<ApplicationUser,
 
 builder.Services.AddLogging();
 
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
+
+var jwtsettings = new JwtSettings();
+builder.Configuration.Bind(nameof(jwtsettings),jwtsettings);
+builder.Services.AddSingleton(jwtsettings);
+
 //Adding authentication
 builder.Services.AddAuthentication(
    options =>
@@ -35,27 +43,53 @@ builder.Services.AddAuthentication(
      //adding jwt bearer as authentication
      .AddJwtBearer(options =>
      {
+
          options.SaveToken = true;
          options.RequireHttpsMetadata = false;
          options.TokenValidationParameters = new TokenValidationParameters
          {
              
-             ValidateIssuer = true,
-             ValidateAudience = true,
+             ValidateIssuer = false,
+             ValidateAudience = false,
              ValidateLifetime = true,
              ValidateIssuerSigningKey = true,
+             RequireExpirationTime = false,
              ValidIssuer = builder.Configuration["Jwt:ValidIssuer"],
              ValidAudience = builder.Configuration["Jwt:ValidAudience"],
-             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]))
+             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration[jwtsettings.SecretKey]))
          };
      });
+
+
 
 builder.Services.AddTransient<ITokenService, TokenService>();
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+builder.Services.AddSwaggerGen(x =>
+{
+    var security = new Dictionary<string, IEnumerable<string>>
+    {
+        { "Bearer", new string[0] }
+    };
+
+    var securityScheme = new OpenApiSecurityScheme
+    {
+        Description = "JWT authorization header using the bearer scheme",
+        Type = SecuritySchemeType.ApiKey,
+        In = ParameterLocation.Header,
+        Name = "Authorization", // Fix the typo in the header name
+    };
+
+    x.AddSecurityDefinition("Bearer", securityScheme);
+    x.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        { securityScheme, new List<string>() }
+    });
+});
+
 
 var app = builder.Build();
 

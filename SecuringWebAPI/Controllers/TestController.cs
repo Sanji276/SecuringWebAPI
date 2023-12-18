@@ -5,12 +5,12 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace SecuringWebAPI.Controllers
 {
-    [Route("api/[controller]/{action}")]
+    [Route("api/[controller]/[action]")]
     [ApiController]
     public class TestController : ControllerBase
     {
         [Authorize(Roles ="User",AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-        public IActionResult Inde()
+        public IActionResult Ind()
         {
             string[] car =
             {
