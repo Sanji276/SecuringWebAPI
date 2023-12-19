@@ -1,7 +1,10 @@
-﻿namespace SecuringWebAPI.Repositories.Abstract
+﻿using Microsoft.AspNetCore.Identity;
+using SecuringWebAPI.Model.Domain;
+
+namespace SecuringWebAPI.Repositories.Abstract
 {
     public interface IIdentityService
     {
-        Task RegisterAsync(string? email, string? password);
+        Task<AuthenticationResult> RegisterAsync(string? email, string? password);
     }
 }
