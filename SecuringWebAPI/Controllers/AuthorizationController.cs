@@ -37,7 +37,7 @@ namespace SecuringWebAPI.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> GetToken([FromBody] LoginModel model)
+        public async Task<IActionResult> generateToken([FromBody] LoginModel model)
         {
             var user = await _userManager.FindByNameAsync(model.UserName);
             _logger.LogInformation($"Email: {model.UserName}, Password: {model.Password}");
