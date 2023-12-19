@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using SecuredWebAPIBestPractices.Model.Domain;
 using SecuringWebAPI.Model.Domain;
 
 namespace SecuringWebAPI.Data
@@ -12,6 +13,6 @@ namespace SecuringWebAPI.Data
 
         }
 
-        public DbSet<TokenInfo> TokenInfos { get; set; }
+        public DbSet<Post> Posts { get; set; }
     }
 }

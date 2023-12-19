@@ -1,10 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using SecuringWebAPI.Model.DTO;
 using SecuringWebAPI.Repositories.Abstract;
 
 namespace SecuringWebAPI.Controllers
 {
-    public class IdentityController : Controller
+    [Route("api/[controller]/[action]")]
+    [ApiController]
+    public class IdentityController : ControllerBase
     {
         private readonly IIdentityService _identityService;
 
@@ -12,15 +15,39 @@ namespace SecuringWebAPI.Controllers
         {
             _identityService = identityService;
         }
-        public IActionResult Index()
-        {
-            return View();
-        }
 
-        public async Task<IActionResult> Register([FromBody] RegistrationModel model)
+        [HttpPost]
+        public async Task<IActionResult> RegisterAsync([FromBody] RegistrationModel model)
         {
             var authResponse = await _identityService.RegisterAsync(model.Email, model.Password);
-            return Ok();
+            if (!authResponse.Success)
+            {
+                return BadRequest(new AuthFailedResponse
+                {
+                    Errors = authResponse.Errors
+                });
+            }
+            return Ok(new AuthSuccessResponse
+            {
+                Token = authResponse.Token
+            });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> LoginAsync([FromBody] LoginModel model)
+        {
+            var authResponse = await _identityService.LoginUser(model);
+            if (!authResponse.Success)
+            {
+                return BadRequest(new AuthFailedResponse
+                {
+                    Errors = authResponse.Errors
+                });
+            }
+            return Ok(new AuthSuccessResponse
+            {
+                Token = authResponse.Token
+            });
         }
     }
 }
