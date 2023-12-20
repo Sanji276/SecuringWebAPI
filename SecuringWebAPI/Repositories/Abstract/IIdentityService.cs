@@ -8,5 +8,6 @@ namespace SecuringWebAPI.Repositories.Abstract
     {
         Task<AuthenticationResult> LoginUser(LoginModel model);
         Task<AuthenticationResult> RegisterAsync(string? email, string? password);
+        Task<AuthenticationResult> RequestRefreshTokenAsync(string token, string refreshtoken);
     }
 }

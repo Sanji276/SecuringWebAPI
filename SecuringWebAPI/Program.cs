@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using SecuredWebAPIBestPractices.Repositories.Abstract;
 using SecuredWebAPIBestPractices.Repositories.Domain;
 using SecuringWebAPI.Data;
 using SecuringWebAPI.Model.Domain;
@@ -33,7 +34,20 @@ builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"))
 //builder.Configuration.Bind(nameof(jwtsettings),jwtsettings);
 //builder.Services.AddSingleton(new JwtSettings());
 
+var tokenValidationParameters = new TokenValidationParameters
+{
+    ValidateIssuer = false,
+    ValidateAudience = false,
+    ValidateLifetime = true,
+    ValidateIssuerSigningKey = true,
+    RequireExpirationTime = false,
+    ValidIssuer = builder.Configuration["Jwt:ValidIssuer"],
+    ValidAudience = builder.Configuration["Jwt:ValidAudience"],
+    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]))
 
+};
+
+builder.Services.AddSingleton(tokenValidationParameters);
 ////Adding authentication
 builder.Services.AddAuthentication(
    options =>
@@ -48,22 +62,13 @@ builder.Services.AddAuthentication(
 
          options.SaveToken = true;
          options.RequireHttpsMetadata = false;
-         options.TokenValidationParameters = new TokenValidationParameters
-         {
-             
-             ValidateIssuer = false,
-             ValidateAudience = false,
-             ValidateLifetime = true,
-             ValidateIssuerSigningKey = true,
-             RequireExpirationTime = false,
-             ValidIssuer = builder.Configuration["Jwt:ValidIssuer"],
-             ValidAudience = builder.Configuration["Jwt:ValidAudience"],
-             IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:SecretKey"]))
-         };
+         options.TokenValidationParameters = tokenValidationParameters;
+        
      });
 
 builder.Services.AddScoped<IIdentityService, IdentityService>();
 
+builder.Services.AddScoped<IBlogsRepository, BlogsRepository>();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

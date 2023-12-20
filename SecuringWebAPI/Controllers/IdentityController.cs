@@ -46,7 +46,8 @@ namespace SecuringWebAPI.Controllers
             }
             return Ok(new AuthSuccessResponse
             {
-                Token = authResponse.Token
+                Token = authResponse.Token,
+                RefreshToken = authResponse.RefreshToken
             });
         }
     }

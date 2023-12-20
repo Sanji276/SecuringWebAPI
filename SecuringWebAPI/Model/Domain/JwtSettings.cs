@@ -3,5 +3,6 @@
     public class JwtSettings
     {
         public string? SecretKey { get; set; }
+        public TimeSpan TokenExpiryTime { get; set; }
     }
 }

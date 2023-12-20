@@ -10,7 +10,7 @@ using SecuringWebAPI.Model.DTO;
 namespace SecuredWebAPIBestPractices.Controllers
 {
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
-    [Route("api/[controller]")]
+    [Route("api/[controller]/[action]")]
     [ApiController]
     public class BlogController : ControllerBase
     {
@@ -32,10 +32,10 @@ namespace SecuredWebAPIBestPractices.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError,
                 "Error creating new Blog");
             }
-            return CreatedAtAction(nameof(Create), "Blog has been created with id=" + new { id = postrequest?.Id }, postrequest);
+            return CreatedAtAction(nameof(Create), "Blog has been created with id=" + new { id = response }, postrequest);
         }
 
-        [HttpPost]
+        [HttpDelete("~/api/delete/{postid}")]
         public async Task<IActionResult> Delete([FromRoute] Guid postid)
         {
             var userOwnBlog = await _blogsRepository.UserOwnBlogAsync(postid, HttpContext.GetUserId().ToString());

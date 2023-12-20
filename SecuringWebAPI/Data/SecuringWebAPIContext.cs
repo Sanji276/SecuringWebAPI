@@ -14,5 +14,6 @@ namespace SecuringWebAPI.Data
         }
 
         public DbSet<Post> Posts { get; set; }
+        public DbSet<RefreshTokenModel> RefreshTokens { get; set; }
     }
 }
