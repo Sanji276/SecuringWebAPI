@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using SecuredWebAPIBestPractices.Model.Domain;
 using SecuringWebAPI.Model.DTO;
 using SecuringWebAPI.Repositories.Abstract;
 
@@ -29,6 +30,7 @@ namespace SecuringWebAPI.Controllers
             }
             return Ok(new AuthSuccessResponse
             {
+                RefreshToken = authResponse.RefreshToken,
                 Token = authResponse.Token
             });
         }
@@ -37,6 +39,24 @@ namespace SecuringWebAPI.Controllers
         public async Task<IActionResult> LoginAsync([FromBody] LoginModel model)
         {
             var authResponse = await _identityService.LoginUser(model);
+            if (!authResponse.Success)
+            {
+                return BadRequest(new AuthFailedResponse
+                {
+                    Errors = authResponse.Errors
+                });
+            }
+            return Ok(new AuthSuccessResponse
+            {
+                Token = authResponse.Token,
+                RefreshToken = authResponse.RefreshToken
+            });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RefreshTokenAsync([FromBody] RequestRefreshTokenModel model)
+        {
+            var authResponse = await _identityService.RequestRefreshTokenAsync(model.Token,model.RefreshToken);
             if (!authResponse.Success)
             {
                 return BadRequest(new AuthFailedResponse

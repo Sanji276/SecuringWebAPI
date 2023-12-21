@@ -72,7 +72,7 @@ namespace SecuredWebAPIBestPractices.Repositories.Domain
                     new Claim(JwtRegisteredClaimNames.Email, User.Email),
                     new Claim("Id",User.Id)
                 }),
-                Expires = DateTime.UtcNow.Add(_jwtSettings.Value.TokenExpiryTime),
+                Expires = DateTime.Now.Add(_jwtSettings.Value.TokenExpiryTime),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(SecretKey)
                                                     , SecurityAlgorithms.HmacSha256Signature)
             };
@@ -81,11 +81,11 @@ namespace SecuredWebAPIBestPractices.Repositories.Domain
 
             var refreshToken = new RefreshTokenModel
             {
-
+                Token = token.Id,
                 JwtId = token.Id,
                 UserId = User.Id,
-                CreationDate = DateTime.UtcNow,
-                ExpiryDate = DateTime.UtcNow.AddHours(1),
+                CreationDate = DateTime.Now,
+                ExpiryDate = DateTime.Now.AddHours(1),
             };
 
             await _context.RefreshTokens.AddAsync(refreshToken);
@@ -125,10 +125,10 @@ namespace SecuredWebAPIBestPractices.Repositories.Domain
             }
 
             var expiryDateUnix = long.Parse(validatedToken.Claims.Single(x => x.Type == JwtRegisteredClaimNames.Exp).Value);
+            var expiryDateUtc = DateTimeOffset.FromUnixTimeSeconds(expiryDateUnix).DateTime.ToLocalTime();
+            //var expiryDateUtc = DateTime.Now.AddSeconds(expiryDateUnix);
 
-            var expiryDateUtc = new DateTime(1970, 1, 1, 1, 0, 0, 0,DateTimeKind.Utc).AddSeconds(expiryDateUnix);
-
-            if(expiryDateUtc> DateTime.UtcNow)
+            if(expiryDateUtc> DateTime.Now)
             {
                 return new AuthenticationResult { Errors = new[] { "Cannot refresh Token. Token hasn't expired yet" } };
             }
@@ -140,7 +140,7 @@ namespace SecuredWebAPIBestPractices.Repositories.Domain
             if (storedRefreshToken == null)
                 return new AuthenticationResult { Errors = new[] { "Invalid Refresh Token" } };
 
-            if(DateTime.UtcNow >  storedRefreshToken.ExpiryDate)
+            if(DateTime.Now >  storedRefreshToken.ExpiryDate)
                 return new AuthenticationResult { Errors = new[] { "Refresh Token is expired" } };
 
             if(storedRefreshToken.Used)
